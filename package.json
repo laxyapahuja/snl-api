@@ -1,0 +1,30 @@
+{
+  "name": "snl-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laxyapahuja/snl-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/laxyapahuja/snl-api/issues"
+  },
+  "homepage": "https://github.com/laxyapahuja/snl-api#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^8.0.0",
+    "nodemon": "^3.0.1",
+    "path": "^0.12.7",
+    "random-hash": "^4.0.1",
+    "socket.io": "^4.7.2"
+  }
+}
