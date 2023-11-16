@@ -50,6 +50,9 @@ io.on('connection', socket => {
     socket.on('join', async(room) => { // Join event
         io.to(room).emit('join');
     })
+    socket.on('start', async(room) => { // Start event
+        io.to(room).emit('start');
+    })
 })
 
 module.exports = app;

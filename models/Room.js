@@ -18,6 +18,10 @@ const RoomSchema = new mongoose.Schema({
         type: String,
         enum: ['RUNNING', 'ENDED', 'WAITING'],
         default: 'WAITING'
+    },
+    turn: {
+        type: String,
+        default: ''
     }
 })
 

@@ -24,6 +24,10 @@ const PlayerSchema = new mongoose.Schema({
     active: {
         type: Boolean,
         default: true
+    },
+    created_on: {
+        type: Date,
+        default: Date.now()
     }
 })
 
