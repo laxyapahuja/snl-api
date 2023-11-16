@@ -53,6 +53,9 @@ io.on('connection', socket => {
     socket.on('start', async(room) => { // Start event
         io.to(room).emit('start');
     })
+    socket.on('roll', async(room) => { // Start event
+        io.to(room).emit('roll');
+    })
 })
 
 module.exports = app;

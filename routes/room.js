@@ -61,14 +61,18 @@ router.post('/join', async(req, res) => {
 router.get('/', async(req, res) => {
     let player = await Player.findOne({access_token: req.query.token});
     let isAdmin = false
+    let isTurn = false
     if (player) {
         let room = await Room.findOne({code: player.room_code});
         if (room) {
             if (player._id == room.admin) {
                 isAdmin = true
             }
-            let players = await Player.find({active: true, room_code: player.room_code}, {name: 1})
-            res.json({success: true, room_code: player.room_code, name: player.name, is_admin: isAdmin, players: players, room_admin: room.admin, status: room.status})
+            if (player._id == room.turn) {
+                isTurn = true
+            }
+            let players = await Player.find({active: true, room_code: player.room_code}, {name: 1, current_position: 1}).sort({created_on:1})
+            res.json({success: true, room_code: player.room_code, name: player.name, is_admin: isAdmin, players: players, room_admin: room.admin, status: room.status, is_turn: isTurn, current_position: player.current_position})
         } else {
             res.json({success: false, error: 'Room not found'})
         }
@@ -108,25 +112,64 @@ router.get('/dice', async(req, res) => {
     let player = await Player.findOne({access_token: req.query.token});
     if (!player) {
         res.json({success: false, error: 'Player not found'})
+        return;
     }
     let room = await Room.findOne({code: player.room_code})
     if (!room) {
         res.json({success: false, error: 'Room not found'})
+        return;
     }
     if (room.status != "RUNNING") {
         res.json({success: false, error: 'Room not found'})
+        return;
     }
     if (room.turn != player._id) {
         res.json({success: false, error: 'Not your turn'})
+        return;
     }
     let dice = Math.floor((Math.random() * 6) + 1);
-    if (player.current_position + dice > 100) {
-        res.json({success: true, dice: dice, current_position: player.current_position, message: `Need a number smaller or equal to ${100-player.current_position}`});
+    let players = await Player.find({active: true, room_code: player.room_code}, {name: 1}).sort({created_on:1})
+    console.log(players)
+    for (let i = 0; i<room.player_limit; i++) {
+        if (players[i]._id == room.turn) {
+            if (i == (room.player_limit - 1)) {
+                console.log('hey')
+                room.turn = players[0]._id
+                await room.save()
+                break;
+            } else {
+                room.turn = players[i+1]._id
+                console.log('he1')
+                await room.save()
+                break;
+            }
+        }
     }
-    if (config[player.current_position + dice]) {
-        player.current_position = config[player.current_position + dice];
-        await player.save()
-        res.json({success: true, dice: dice, current_position: config[player.current_position + dice], message: `You arrived on ${player.current_position + dice} and encontered a ${player.current_position + dice > config[player.current_position + dice] ? 'snake' : 'ladder'}.`})
+    if (player.current_position + dice > 100) {
+        res.json({success: true, dice: dice, current_position: player.current_position, message: `Dice: ${dice} Need a number smaller or equal to ${100-player.current_position}`});
+        return;
+    } else {
+        if (player.current_position + dice == 100) {
+            player.current_position = 100;
+            await player.save()
+            room.status = 'ENDED'
+            await room.save()
+            res.json({success: true, message: `Game Over. ${player.name} won the match.`})
+            return;
+        } else {
+            if (config[player.current_position + dice]) {
+                let oldPos = player.current_position + dice
+                player.current_position = config[player.current_position + dice];
+                await player.save()
+                res.json({success: true, dice: dice, current_position: player.current_position, message: `Dice: ${dice} You arrived on ${oldPos} and encontered a ${oldPos > player.current_position ? 'snake' : 'ladder'}.`})
+                return;
+            } else {
+                player.current_position = player.current_position + dice;
+                await player.save()
+                res.json({success: true, dice: dice, current_position: player.current_position, message: `Dice: ${dice} You arrived on ${player.current_position}.`})
+                return;
+            }
+        }
     }
 })
 
